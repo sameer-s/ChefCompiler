@@ -1,2 +1,0 @@
-rm *.java
-java -cp ../../lib/javacc.jar javacc Parser.jj
