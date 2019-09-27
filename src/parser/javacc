@@ -1,2 +1,2 @@
 rm *.java
-java -cp ../../lib/javacc.jar javacc Parser.jj
+java -cp ../../lib/javacc.jar javacc -debug_parser Parser.jj

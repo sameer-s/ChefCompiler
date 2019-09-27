@@ -4,8 +4,8 @@ public class Parser {
     public static void main(String[] args) throws Throwable {
         Parser parser = new Parser(new java.io.FileInputStream("HelloWorld.chef"));
         Parser.Start();
+        System.out.println(ParserTokenManager.curLexState);
     }
-
 }
 PARSER_END(Parser)
 
@@ -14,29 +14,40 @@ PARSER_END(Parser)
 // The comments paragraph does not necessarily need to end with a full stop
 // Spaces are not permitted before mandatory fullstops
 
-// Other defined for this state: NUMBER, CHAR
+<DEFAULT> TOKEN: {
+    <END_OF_RECIPE_TITLE: <FULLSTOP><BLANKLINE> > : PRE_METHOD_STATE
+}
+
+// State to process comments and "scan" for the next state
+<PRE_METHOD_STATE> TOKEN: {
+    < COMMENT_CHAR: ~["\n", "\r"] > |
+    < INGREDIENTS: "Ingredients." > : INGREDIENTS_STATE |
+    < COOKING_TIME: "Cooking" (<SPACE>)+ "time:" > : COOKING_TIME_STATE |
+    < PREHEAT: "Pre-heat" (<SPACE>)+ "oven" (<SPACE>)+ "to" > : OVEN_TEMP_STATE |
+    < METHOD: "Method." > : METHOD_STATE
+}
+
 <INGREDIENTS_STATE> TOKEN: {
-    <INGREDIENTS: "Ingredients"> |
     <MEASURE_TYPE: "heaped" | "level"> |
     <DRY_MEASURE: "g" | "kg" | "pinch"("es")?> |
     <WET_MEASURE: "ml" | "l" | "dash"("es")?> |
-    <UNSPECIFIED_MEASURE: "cup" | "cups" | "teaspoon"("s")? | "tablespoon"("s")? >
+    <UNSPECIFIED_MEASURE: "cup" | "cups" | "teaspoon"("s")? | "tablespoon"("s")? > |
+    < END_OF_INGREDIENTS: <BLANKLINE> > : PRE_METHOD_STATE
 }
 
 <COOKING_TIME_STATE> TOKEN: {
-    < COOKING_TIME: "Cooking" (<SPACE>)+ "time:"> |
-    < TIME_UNIT: "hour"("s")? | "minute"("s")? >
+    < TIME_UNIT: "hour"("s")? | "minute"("s")? > |
+    < END_OF_COOKING_TIME: <BLANKLINE> > : PRE_METHOD_STATE
 }
 
 <OVEN_TEMP_STATE> TOKEN: {
-    < PREHEAT: "Pre-heat" (<SPACE>)+ "oven" (<SPACE>)+ "to" > |
     < TEMP_UNIT: "degrees" (<SPACE>)+ "Celsius" > |
     < GAS_MARK: "(gas" (<SPACE>)+ "mark" > |
-    < CLOSE_PAREN: ")" >
+    < CLOSE_PAREN: ")" > |
+    < END_OF_OVEN_TEMP: <BLANKLINE> >
 }
 
 <METHOD_STATE> TOKEN: {
-    < METHOD: "Method." > |
     < TAKE: "Take" > |
     < PUT: "Put" > |
 
@@ -55,81 +66,68 @@ PARSER_END(Parser)
 <DEFAULT, COOKING_TIME_STATE, OVEN_TEMP_STATE> TOKEN: {
     < FULLSTOP: "." >
 }
-<DEFAULT, COMMENTS_STATE, METHOD_STATE> TOKEN: {
+<DEFAULT, INGREDIENTS_STATE, METHOD_STATE> TOKEN: {
     < CHAR: ~["\n", "\r", " ", "\t"] >
 }
 <*> TOKEN: {
     // When possible, spaces are grabbed as a part of EOL tokens as those spaces are never useful and it simplifies the grammar
-    < EOL: (<SPACE>)* ("\r\n" | "\r" | "\n") (<SPACE>)* > |
-    < SPACE: (" " | "\t") >
+    < EOL: (<SPACE>)? ("\r\n" | "\n") (<SPACE>)? > |
+    // Also, we match as many spaces as possible since the number of spaces is never relevant
+    < SPACE: (" " | "\t")+ > |
+    < BLANKLINE: <EOL>(<EOL>)+ >
 }
+
 // These "generic" tokens should be matched last, thus they are at the end
 
 void Start() :
-{ System.out.println("Warning: did you regenerate parser?"); }
+{}
 {
+    (<SPACE>)?
+
     // Recipe Title
-    (<SPACE>)* (<CHAR>)+ ((<SPACE>)+ (<CHAR>)+)* <FULLSTOP>
-    BlankLine()
+    (<CHAR>)+ (<SPACE> (<CHAR>)+)* <END_OF_RECIPE_TITLE>
 
     // Comments
-    { ParserTokenManager.SwitchTo(COMMENTS_STATE); }
-    ((<CHAR> | <SPACE>)+ BlankLine())?
+    ((<COMMENT_CHAR>)* <BLANKLINE>)?
 
     // Ingredients
-    { ParserTokenManager.SwitchTo(INGREDIENTS_STATE); }
-    {System.out.println(1);}
-    <INGREDIENTS> {System.out.println(2);} <EOL>
-    {System.out.println(3);}
     (
+        <INGREDIENTS><EOL>
         (
-            (<NUMBER> (<SPACE>)+)?
+            (<NUMBER> <SPACE>)?
             (LOOKAHEAD(IngredientMeasureToken()) IngredientMeasureToken())?
-            IngredientNameToken() (IngredientNameToken() | <SPACE>)* <EOL>
+            IngredientNameToken() (IngredientNameToken() | <SPACE>)* (<EOL> | <END_OF_INGREDIENTS>)
+            /* When END_OF_INGREDIENTS is matched, the lexical state will change to PRE_METHOD_STATE
+               which cannot match NUMBER so the ingredients list will necessarily end */
         )*
-        (<EOL>)+ // Match second part of blank line
     )?
 
     // Cooking Time
-    { ParserTokenManager.SwitchTo(COOKING_TIME_STATE); }
     (
-        <COOKING_TIME> (<SPACE>)+
+        <COOKING_TIME> <SPACE>
         <NUMBER>
-        ((<SPACE>)+ <TIME_UNIT>)?
-        <FULLSTOP> (<SPACE>)*
-        BlankLine()
+        (<SPACE> <TIME_UNIT>)?
+        <FULLSTOP>
+        <END_OF_COOKING_TIME>
     )?
 
     // Oven Temperature
-    { ParserTokenManager.SwitchTo(OVEN_TEMP_STATE); }
     (
-        <PREHEAT> (<SPACE>)+ <NUMBER> (<SPACE>)+ <TEMP_UNIT>
-        ((<SPACE>)+ <GAS_MARK> (<SPACE>)+ <NUMBER> <CLOSE_PAREN>)?
-        <FULLSTOP> (<SPACE>)*
-        BlankLine()
+        <PREHEAT> <SPACE>
+        <NUMBER> <SPACE>
+        <TEMP_UNIT>
+        (<SPACE> <GAS_MARK> <SPACE> <NUMBER> <CLOSE_PAREN>)?
+        <FULLSTOP>
+        <END_OF_OVEN_TEMP>
     )?
 
-    { ParserTokenManager.SwitchTo(METHOD_STATE); }
-    {
-
-    }
-
-//    (<EOL>)*
     <EOF>
 }
-
-// Matches at least one blank line (two newlines)
-void BlankLine():
-{}
-{
-    <EOL> (<EOL>)+
-}
-
 
 void IngredientMeasureToken():
 {}
 {
-<   MEASURE_TYPE> (<SPACE>)+ <UNSPECIFIED_MEASURE> | <DRY_MEASURE> | <WET_MEASURE> (<SPACE>)+
+    (<MEASURE_TYPE> (<SPACE>)+)? (<UNSPECIFIED_MEASURE> | <DRY_MEASURE> | <WET_MEASURE>) (<SPACE>)+
 }
 
 // Just match any token, it doesn't really matter - reserved keywords should not be relevant

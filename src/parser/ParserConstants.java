@@ -11,84 +11,101 @@ public interface ParserConstants {
   /** End of File. */
   int EOF = 0;
   /** RegularExpression Id. */
-  int INGREDIENTS = 1;
+  int END_OF_RECIPE_TITLE = 1;
   /** RegularExpression Id. */
-  int MEASURE_TYPE = 2;
+  int COMMENT_CHAR = 2;
   /** RegularExpression Id. */
-  int DRY_MEASURE = 3;
+  int INGREDIENTS = 3;
   /** RegularExpression Id. */
-  int WET_MEASURE = 4;
+  int COOKING_TIME = 4;
   /** RegularExpression Id. */
-  int UNSPECIFIED_MEASURE = 5;
+  int PREHEAT = 5;
   /** RegularExpression Id. */
-  int COOKING_TIME = 6;
+  int METHOD = 6;
   /** RegularExpression Id. */
-  int TIME_UNIT = 7;
+  int MEASURE_TYPE = 7;
   /** RegularExpression Id. */
-  int PREHEAT = 8;
+  int DRY_MEASURE = 8;
   /** RegularExpression Id. */
-  int TEMP_UNIT = 9;
+  int WET_MEASURE = 9;
   /** RegularExpression Id. */
-  int GAS_MARK = 10;
+  int UNSPECIFIED_MEASURE = 10;
   /** RegularExpression Id. */
-  int CLOSE_PAREN = 11;
+  int END_OF_INGREDIENTS = 11;
   /** RegularExpression Id. */
-  int METHOD = 12;
+  int TIME_UNIT = 12;
   /** RegularExpression Id. */
-  int TAKE = 13;
+  int END_OF_COOKING_TIME = 13;
   /** RegularExpression Id. */
-  int PUT = 14;
+  int TEMP_UNIT = 14;
   /** RegularExpression Id. */
-  int FROM = 15;
+  int GAS_MARK = 15;
   /** RegularExpression Id. */
-  int INTO = 16;
+  int CLOSE_PAREN = 16;
   /** RegularExpression Id. */
-  int TO = 17;
+  int END_OF_OVEN_TEMP = 17;
   /** RegularExpression Id. */
-  int THE = 18;
+  int TAKE = 18;
   /** RegularExpression Id. */
-  int FRIDGE = 19;
+  int PUT = 19;
   /** RegularExpression Id. */
-  int MIXING_BOWL = 20;
+  int FROM = 20;
   /** RegularExpression Id. */
-  int NUMBER = 21;
+  int INTO = 21;
   /** RegularExpression Id. */
-  int FULLSTOP = 22;
+  int TO = 22;
   /** RegularExpression Id. */
-  int CHAR = 23;
+  int THE = 23;
   /** RegularExpression Id. */
-  int EOL = 24;
+  int FRIDGE = 24;
   /** RegularExpression Id. */
-  int SPACE = 25;
+  int MIXING_BOWL = 25;
+  /** RegularExpression Id. */
+  int NUMBER = 26;
+  /** RegularExpression Id. */
+  int FULLSTOP = 27;
+  /** RegularExpression Id. */
+  int CHAR = 28;
+  /** RegularExpression Id. */
+  int EOL = 29;
+  /** RegularExpression Id. */
+  int SPACE = 30;
+  /** RegularExpression Id. */
+  int BLANKLINE = 31;
 
   /** Lexical state. */
-  int INGREDIENTS_STATE = 0;
+  int DEFAULT = 0;
   /** Lexical state. */
-  int COOKING_TIME_STATE = 1;
+  int PRE_METHOD_STATE = 1;
   /** Lexical state. */
-  int OVEN_TEMP_STATE = 2;
+  int INGREDIENTS_STATE = 2;
   /** Lexical state. */
-  int METHOD_STATE = 3;
+  int COOKING_TIME_STATE = 3;
   /** Lexical state. */
-  int DEFAULT = 4;
+  int OVEN_TEMP_STATE = 4;
   /** Lexical state. */
-  int COMMENTS_STATE = 5;
+  int METHOD_STATE = 5;
 
   /** Literal token values. */
   String[] tokenImage = {
     "<EOF>",
-    "\"Ingredients\"",
+    "<END_OF_RECIPE_TITLE>",
+    "<COMMENT_CHAR>",
+    "\"Ingredients.\"",
+    "<COOKING_TIME>",
+    "<PREHEAT>",
+    "\"Method.\"",
     "<MEASURE_TYPE>",
     "<DRY_MEASURE>",
     "<WET_MEASURE>",
     "<UNSPECIFIED_MEASURE>",
-    "<COOKING_TIME>",
+    "<END_OF_INGREDIENTS>",
     "<TIME_UNIT>",
-    "<PREHEAT>",
+    "<END_OF_COOKING_TIME>",
     "<TEMP_UNIT>",
     "<GAS_MARK>",
     "\")\"",
-    "\"Method.\"",
+    "<END_OF_OVEN_TEMP>",
     "\"Take\"",
     "\"Put\"",
     "\"from\"",
@@ -102,6 +119,7 @@ public interface ParserConstants {
     "<CHAR>",
     "<EOL>",
     "<SPACE>",
+    "<BLANKLINE>",
   };
 
 }
